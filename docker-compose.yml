@@ -1,0 +1,33 @@
+version: '2.2'
+services:
+
+  php:
+    build:
+      dockerfile: Dockerfile-${DOCKERFILE_FLAVOUR}
+      context: 'php'
+      args:
+        - PHP_BASE_IMAGE_VERSION
+        - X_LEGACY_GD_LIB
+    image: ${PHP_IMAGE_NAME}:${PHP_BASE_IMAGE_VERSION}${PHP_IMAGE_VERSION_SUFFIX}
+    environment:
+      - GITHUB_API_TOKEN=${GITHUB_API_TOKEN}
+      - PHP_ENABLE_XDEBUG
+      - TEST_RUNTIME_PATH=/tmp/runtime
+    volumes:
+      - ./tests:/tests:delegated
+      # Framework testing
+      - ./_host-volumes/yii2:/yii2:delegated
+      # Application testing
+      - ./_host-volumes/app:/app:delegated
+      # Composer cache
+      - ~/.composer-docker/cache:/root/.composer/cache:delegated
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+    volumes:
+      - ./_host-volumes/database:/var/lib/mysql
+    ports:
+      - '3306:3306'
